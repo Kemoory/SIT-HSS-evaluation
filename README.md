@@ -7,7 +7,7 @@
 
 ## Introduction
 
-Ce projet se fait dans le cadre du cours **Modélisation de systèmes intelligents** du Master 2 Vision et Machine Intelligentes du l'Université Paris Cité. Il consiste à étudié et comparé deux méthodes de segmentation par superpixels. 
+Ce projet se fait dans le cadre du cours **Modélisation de systèmes intelligents** du Master 2 Vision et Machine Intelligentes du l'Université Paris Cité. Il consiste à étudié et comparé des méthodes de segmentation par superpixels. 
 
 Ce dépot correspond au code reprenant la méthode de l'article, *Hierarchical Superpixel Segmentation via Structural Information Theory* [1] (SIT-HSS). L'ensemble des méthodes se trouve sur le dépôt suivant : https://github.com/Evowind/slic-hierarchical-superpixels.
 
