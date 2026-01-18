@@ -5,36 +5,15 @@
 
 ---
 
-## Présentation du sujet
+## Introduction
 
-Ce projet implémente et évalue **SIT-HSS** (*Hierarchical Superpixel Segmentation via Structural Information Theory*), une méthode innovante de segmentation hiérarchique de superpixels basée sur la théorie de l'information structurelle. Les superpixels sont des regroupements de pixels adjacents partageant des caractéristiques visuelles similaires (couleur, texture), constituant une représentation intermédiaire entre les pixels bruts et la segmentation sémantique complète.
+Ce projet se fait dans le cadre du cours **Modélisation de systèmes intelligents** du Master 2 Vision et Machine Intelligentes du l'Université Paris Cité. Il consiste à étudié et comparé deux méthodes de segmentation par superpixels. 
 
-### Contexte et motivation
+Ce dépot correspond au code reprenant la méthode de l'article, *Hierarchical Superpixel Segmentation via Structural Information Theory* [1] (SIT-HSS). L'ensemble des méthodes se trouve sur le dépôt suivant : https://github.com/Evowind/slic-hierarchical-superpixels.
 
-Malgré la dominance du deep learning en vision par ordinateur, les méthodes de superpixelisation conservent leur pertinence pour plusieurs raisons :
+### Segmentation en superpixels
 
-- **Efficacité computationnelle** : Réduction drastique du nombre de primitives à traiter
-- **Interprétabilité** : Représentation mid-level compréhensible et manipulable
-- **Apprentissage faiblement supervisé** : Support pour annotations partielles
-- **Prétraitement pour réseaux de neurones** : Segmentation initiale pour architectures graph-based
-- **Applications contraintes** : Imagerie satellite, systèmes embarqués où les ressources sont limitées
-
-**Note importante** : Ce dépôt est une copie extraite du projet complet développé en collaboration (Yanis & Samy), disponible sur : https://github.com/Evowind/slic-hierarchical-superpixels  
-Cette version contient l'implémentation SIT-HSS développée par Yanis.
-
----
-
-## Article de référence
-
-### Hierarchical Superpixel Segmentation via Structural Information Theory (2025)
-**Minhui Xie, Hao Peng, et al.**  
-[arXiv:2501.07069](https://arxiv.org/abs/2501.07069)  
-
-**Contributions principales** :
-- Stratégie de construction de graphe basée sur la maximisation de l'entropie structurelle 1D
-- Algorithme de partitionnement hiérarchique guidé par la minimisation de l'entropie structurelle 2D
-- Performances state-of-the-art sur trois benchmarks (BSDS500, SBD, PASCAL-S)
-- Complexité linéaire O(|E|) avec support GPU
+Il s'agit d'un processus qui regroupe des pixels adjacents ayant des caractéristiques similaires comme la couleur et la position pour former des régions cohérentes appelées superpixels. Cette technique simplifie considérablement la représentation d'une image en réduisant le nombre de primitives à traiter, ce qui facilite ensuite des tâches de vision par ordinateur plus complexes comme la détection d'objets ou la classification d'images.
 
 ---
 
@@ -73,7 +52,7 @@ SIT-HSS repose sur la **théorie de l'information structurelle** qui quantifie l
 
 **Distance entre pixels** :
 ```
-ρᵢⱼ = ||cᵢ - cⱼ||² · ||sᵢ - sⱼ||²
+ρᵢⱼ = ||cᵢ - cⱼ||² · ||sᵢ - sⱼ||
 ```
 où :
 - `cᵢ, cⱼ` : caractéristiques couleur (espace Lab)
@@ -106,46 +85,39 @@ Wᵢⱼ = exp(-ρᵢⱼ / (t · moyenne(ρ)))
 
 ---
 
-## Métriques d'évaluation
+## Avantages de SIT-HSS par rapport aux méthodes classiques
 
-### Métriques avec Ground Truth
-
-**Achievable Segmentation Accuracy (ASA)** : Précision théorique maximale
-- Assigne chaque superpixel à la classe GT majoritaire
-- Plage : [0, 1], plus élevé = meilleur
-
-**Boundary Recall (BR)** : Proportion de contours GT correctement détectés
-- Formule : `BR = contours_detectes / total_contours_GT`
-- Plage : [0, 1], plus élevé = meilleur
-
-**Under-segmentation Error (UE)** : Débordement des superpixels
-- Mesure les pixels débordant hors des segments GT
-- Plage : [0, ∞], plus bas = meilleur
-
-**Explained Variation (EV)** : Variation expliquée par les superpixels
-- Mesure la cohérence interne des superpixels
-- Plage : [0, 1], plus élevé = meilleur
-
-### Métriques intrinsèques (sans GT)
-
-**Compactness (CO)** : Mesure la régularité des formes
-- Formule : `C = 4π × aire / périmètre²`
-- Plage : [0, 1], 1.0 = cercle parfait
-
-**Regularity (RE)** : Uniformité des tailles
-- Basée sur coefficient de variation des tailles
-- Plage : [0, 1], 1.0 = toutes tailles identiques
-
-**Global Regularity (GR)** : Uniformité de la grille spatiale
-- Basée sur écart-type des distances inter-centres
-- Plage : [0, 1], 1.0 = grille parfaitement régulière
+| Aspect | Méthodes classiques | SIT-HSS |
+|--------|-------------------|---------|
+| **Information captée** | Relations adjacentes uniquement | Relations non-adjacentes + globales |
+| **Construction graphe** | Statique, rayon fixe | Adaptive, maximisation H⁽¹⁾ |
+| **Partitionnement** | Heuristiques simples | Optimisation théorique (H⁽²⁾) |
 
 ---
 
-## Résultats
+## Métriques d'évaluation
+
+| Métrique | Définition |
+|--------|------------|
+| **GR (Global Regularity)** | Mesure l’uniformité de la taille et de la forme des superpixels sur l’ensemble de l’image. Une valeur élevée indique des superpixels réguliers. |
+| **CO (Compactness)** | Évalue à quel point les superpixels sont compacts, c’est-à-dire proches de formes géométriques simples comme des cercles ou des carrés. |
+| **RE (Regularity)** | Combine plusieurs aspects de régularité afin de mesurer l’homogénéité globale des superpixels. |
+| **BR (Boundary Recall)** | Mesure le pourcentage de contours réels de l’image correctement capturés par les frontières des superpixels. Une valeur élevée indique une meilleure adhérence aux contours. |
+| **P (Precision)** | Mesure la proportion des frontières de superpixels qui correspondent réellement à des contours présents dans l’image. |
+| **CD (Contour Density)** | Quantifie la longueur moyenne des contours des superpixels. Une valeur faible indique une moindre sur-segmentation. |
+| **UE (Undersegmentation Error)** | Mesure le débordement des superpixels sur plusieurs régions de vérité terrain. Une valeur faible indique un bon respect des frontières des objets. |
+| **CUE (Corrected Undersegmentation Error)** | Version améliorée de l’erreur de sous-segmentation (UE) qui corrige certains biais de calcul. |
+| **ASA (Achievable Segmentation Accuracy)** | Représente la fraction maximale de pixels correctement classés en attribuant à chaque superpixel la meilleure étiquette possible. |
+| **EV (Explained Variation)** | Mesure la cohérence des couleurs à l’intérieur de chaque superpixel. Une valeur élevée indique une forte similarité des pixels d’un même superpixel. |
+
+---
+
+## Résultat
+
+On utilise le dataset BSDS500 [5], ici on prend une image pour illustrer le type de résultats que l'on peut obtenir.
 
 ### Visualisation
-**Images BSDS500** (K = 200 superpixels)
+
 
 ![Exemple SIT-HSS](results/sit_hss/103029_sithss.png)
 
@@ -158,9 +130,11 @@ Wᵢⱼ = exp(-ρᵢⱼ / (t · moyenne(ρ)))
 
 ---
 
-### Métriques quantitatives
+### Performances
 
-#### Sans ground truth
+On a effectué une segmentation en 200 superpixels sur une image et dans cette partie on évalue l'efficacité de la segmentation sur cette image.
+
+#### Métriques utilisant la ground truth
 
 | Métrique          | Scores        |
 | ----------------- | ------------- |
@@ -168,7 +142,7 @@ Wᵢⱼ = exp(-ρᵢⱼ / (t · moyenne(ρ)))
 | Régularité        | 0.4507        |
 | Global Regularity | 0.5944        |
 
-#### Avec ground truth
+#### Métriques n'utilisant pas ground truth
 
 | Métrique                       | Scores        |
 | ------------------------------ | ------------- |
@@ -182,168 +156,64 @@ Wᵢⱼ = exp(-ρᵢⱼ / (t · moyenne(ρ)))
 
 ### Temps d'exécution
 
-Image : 481 × 321
-
-Superpixels : 200 
-
-* SIT-HSS : 132.196s
+SIT-HSS : 132.196s
 
 ### Remarque
 
 Le nombre de superpixels voulus est important notamment par rapport au nombre de rayons testés lors de la construction du graphe. En effet moins on a de superpixels plus ils sont grands et inversement, ainsi lorsque l'on en a moins on a besoin de plus d'informations donc d'un rayon plus grand. Cependant plus le rayon est important plus le temps d'exécution sera long, il faut donc faire un compromis sur le entre essayer de trouver le nombre de rayons optimal et une borne maximum à ne pas dépasser pour ne pas impacter trop lourdement le temps d'exécution. Avec ceci il se peut que dans certains cas où le rayon optimal est grand pour une image donnée on est pas les meilleurs résultats possibles. 
 
 ---
+## Sondage sur les méthodes de segmentations
 
-## Evaluation qualitative (12 testeurs)
+### Méthodologie et profil du panel
+L'évaluation a été menée auprès de **12 participants** analysant un jeu de **5 images** tests. Le protocole visait à comparer trois algorithmes : **SLIC**, **SLIC_IPOL** et **SIT-HSS**.
 
-### Protocole
-
-Douze testeurs ont évalué **5 images** en utilisant **trois méthodes de segmentation en superpixels** : **SLIC**, **SLIC_IPOL** et **SIT-HSS**.
-Chaque méthode a été notée selon les critères suivants (échelle de 1 à 5) :
-
-1. **Qualité des contours** : respect des frontières naturelles des objets
-2. **Régularité et uniformité** : homogénéité de la taille et de la forme des superpixels
-3. **Cohérence chromatique** : similarité des couleurs à l'intérieur d'un même superpixel
-4. **Equilibre global** : méthode jugée la plus satisfaisante pour chaque image
-
-Les réponses manquantes (questions modifiées en cours de formulaire) ont été ignorées dans les calculs.
+* **Expertise technique :** 75 % des évaluateurs sont spécialisés en Vision par Ordinateur.
+* **Expérience :** Un tiers des testeurs (33 %) possède une expérience préalable avec les superpixels.
+* **Clarté du protocole :** La méthodologie a été jugée efficace avec une note moyenne de satisfaction de **4.17/5**.
 
 ---
 
-### Profil des testeurs
+### Analyse comparative des résultats
+Le tableau suivant résume les scores moyens (échelle 1 à 5) attribués par les évaluateurs pour chaque critère clé.
 
-* **9 étudiants en Vision par Ordinateur** (75 %)
-* **3 testeurs issus d'autres spécialités** (25 %)
-* **4 testeurs avec expérience préalable des superpixels** (33 %)
-* **8 testeurs sans expérience préalable** (67 %)
-
----
-
-### Scores moyens par méthode (échelle 1–5)
-
-| Critère                 | SLIC     | SLIC_IPOL | SIT-HSS  |
-| ----------------------- | -------- | --------- | -------- |
-| Qualité des contours    | 3.27     | 3.37      | **3.55** |
-| Régularité / uniformité | **3.32** | 3.33      | 3.20     |
-| Cohérence chromatique   | 3.28     | 3.28      | **3.47** |
-| **Moyenne générale**    | **3.29** | **3.33**  | **3.41** |
-
-**Analyse SIT-HSS** :
-- **Meilleurs scores** en qualité des contours (+5.3% vs SLIC_IPOL)
-- **Meilleurs scores** en cohérence chromatique (+5.8% vs SLIC/SLIC_IPOL)
-- Légèrement inférieur en régularité (-3.6% vs SLIC)
-- **Score global le plus élevé** (+2.4% vs SLIC_IPOL, +3.6% vs SLIC)
+| Critère | SLIC | SLIC_IPOL | SIT-HSS | Tendance |
+| :--- | :---: | :---: | :---: | :--- |
+| **Qualité des contours** | 3.27 | 3.37 | **3.55** | Supériorité de **SIT-HSS** |
+| **Cohérence chromatique** | 3.28 | 3.28 | **3.47** | Supériorité de **SIT-HSS** |
+| **Régularité / Uniformité**| **3.32** | 3.33 | 3.20 | Supériorité de **SLIC** |
+| **Moyenne Générale** | 3.29 | 3.33 | **3.41** | **SIT-HSS** est la mieux notée |
 
 ---
 
-### Préférences globales
+### Focus : La Méthode SIT-HSS
+Bien que SIT-HSS soit pénalisée par une géométrie moins régulière, elle s'impose comme la solution préférée pour la précision analytique.
 
-#### Classement global des méthodes
+#### Points Forts (Atouts techniques)
+* **Fidélité structurelle :** SIT-HSS est perçue comme la méthode la plus "fidèle à la réalité".
+* **Précision des frontières :** Elle permet de mieux distinguer les contours complexes (branches, motifs fins, visages) là où les autres méthodes tendent à fusionner les plans.
+* **Contraste et Détails :** Elle offre des détails et des contrastes plus marqués, essentiels pour l'identification d'objets.
 
-(1 = meilleure méthode, 3 = moins performante)
-
-| Méthode       | Rang moyen | 
-| ------------- | ---------- |
-| **SLIC**      | **1.58**   |
-| **SIT-HSS**   | 1.83       |
-| **SLIC_IPOL** | 2.58       |
-
-Bien que SIT-HSS obtienne de meilleurs scores qualitatifs, SLIC est la méthode la plus fréquemment bien classée, suggérant une perception de robustesse et de régularité.
+#### Points Faibles (Limites observées)
+* **Irrégularité géométrique :** Les superpixels présentent des tailles et des formes hétérogènes, ce qui peut nuire à l'esthétique visuelle.
+* **Sur-segmentation :** Dans certains cas, l'algorithme se focalise sur des détails trop infimes au détriment de la structure globale de l'image.
 
 ---
 
-### Meilleur équilibre par image
+### 4. Synthèse des Préférences Globales
 
-(**60 évaluations au total**)
+#### Le choix du "Meilleur Équilibre"
+Lorsqu'il s'agit de désigner la méthode offrant le meilleur compromis par image (60 évaluations cumulées) :
+* **SIT-HSS : 56.7 %** .
+* **SLIC_IPOL :** 20.0 %.
+* **SLIC :** 16.7 %.
 
-| Méthode               | Votes  | Pourcentage |
-| --------------------- | ------ | ----------- |
-| **SIT-HSS**           | **34** | **56.7 %**  |
-| SLIC_IPOL             | 12     | 20.0 %      |
-| SLIC                  | 10     | 16.7 %      |
-| Aucune ne se démarque | 4      | 6.6 %       |
-
-SIT-HSS est majoritairement perçue comme offrant le meilleur compromis global.
+#### Classement par rang moyen
+Paradoxalement, **SLIC** obtient le meilleur rang moyen (1.58) devant **SIT-HSS** (1.83). Cela suggère que si SIT-HSS est souvent la préférée, SLIC reste la méthode la plus consensuelle et robuste "par défaut".
 
 ---
 
-### Comparaison SIT-HSS vs SLIC/SLIC_IPOL
-
-#### SIT-HSS vs SLIC
-
-| Critère               | SIT-HSS meilleur | SLIC meilleur | Equivalent |
-| --------------------- | ---------------- | ------------- | ---------- |
-| Qualité des contours  | **58%**          | 19%           | 23%        |
-| Régularité            | 24%              | **51%**       | 25%        |
-| Cohérence chromatique | **53%**          | 22%           | 25%        |
-
-#### SIT-HSS vs SLIC_IPOL
-
-| Critère               | SIT-HSS meilleur | SLIC_IPOL meilleur | Equivalent |
-| --------------------- | ---------------- | ------------------ | ---------- |
-| Qualité des contours  | **62%**          | 15%                | 23%        |
-| Régularité            | 29%              | 34%                | 37%        |
-| Cohérence chromatique | **56%**          | 18%                | 26%        |
-
----
-
-### Commentaires qualitatifs récurrents
-
-**SLIC**
-
-* Bon équilibre général
-* Régularité visuelle
-* Couleurs perçues comme stables
-
-**SLIC_IPOL**
-
-* Contours plus précis sur certaines images
-* Meilleure perception de relief
-* Capacité à faire ressortir des détails fins spécifiques
-
-**SIT-HSS**
-
-* Fidélité accrue à la structure de l’image
-* Meilleure séparation des objets
-* Détails et contrastes plus marqués
-
-**Limitations observées**
-
-* SLIC : fusion d’éléments distincts, contours externes parfois flous
-* SLIC_IPOL : résultats inconstants selon les images
-* SIT-HSS : sur-segmentation locale dans certains cas
-
----
-
-### Applications suggérées
-
-* Imagerie satellite (détection, analyse de scènes)
-* Traitement artistique et stylisation
-* Analyse médicale (simulation de troubles visuels)
-* Analyse picturale et décomposition de compositions
-
----
-
-### Limites de l’évaluation
-
-Cette évaluation repose sur un nombre limité de testeurs et d’images, ce qui restreint la portée statistique des résultats. Les jugements restent subjectifs et dépendent fortement du contenu des images évaluées. Enfin, certaines réponses (5) ont été ignorées en raison de modifications du formulaire en cours d’évaluation, ce qui peut introduire un léger biais.
-
-
----
-
-### Conclusion de l'évaluation qualitative
-
-
-1. **SIT-HSS est la méthode la plus appréciée globalement**, notamment pour la qualité visuelle perçue
-2. **SLIC et SLIC_IPOL présentent des performances moyennes très proches**
-3. **SLIC se distingue par sa régularité et sa stabilité**
-4. **SLIC_IPOL offre de meilleurs contours dans certains cas spécifiques**
-5. **Aucune méthode n’est universellement supérieure** : le choix dépend fortement du type d’image
-6. Le protocole a été jugé clair et compréhensible par les testeurs (note de 4.17/5)
-
----
-
-## Structure du code
+## Arborescence du dépôt
 
 ```
 slic-ipol-implementation/
@@ -361,10 +231,9 @@ slic-ipol-implementation/
 │       ├── color_space.py            # Conversions RGB/Lab
 │       └── distance.py               # Distance
 ├── experiments/
-│   ├── parameter_tuning.py           # Optimisation paramètres
 │   └── run_hierarchical.py           # Exécution simple
 ├── data/
-│   └── BSDS500/                      # Dataset (non inclus)
+│   └── BSDS500/                      # Dataset
 ├── images/                           # Sortie démo
 ├── results/                          # Résultats générés + Etude Humain
 ├── quick_start_hss.py                # Démo rapide
@@ -385,48 +254,52 @@ CUDA (optionnel, recommandé)
 
 ### Installation
 
+Pour l'installation suivez l'un des deux blocs de commandes suivant :
+
+* Pour Linux et Mac :
+
 ```bash
-# Cloner le dépôt
 git clone git@github.com:Kemoory/SIT-HSS-evaluation.git
 cd SIT-HSS-evaluation
-
-# Créer environnement virtuel
 python -m venv .venv
 source .venv/bin/activate  # Linux/Mac
-# ou
-.venv\Scripts\activate     # Windows
-
-# Installer dépendances
+pip install -r requirements.txt
+```
+* Pour  Windows :
+```bash
+git clone git@github.com:Kemoory/SIT-HSS-evaluation.git
+cd SIT-HSS-evaluation
+python -m venv .venv
+.venv\Scripts\activate     
 pip install -r requirements.txt
 ```
 
 ### Dataset BSDS500
 
-Télécharger depuis : [BSDS500](https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/resources.html)
+Télécharger depuis : [BSDS500](https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/grouping/resources.html) [5]
+puis extraire dans `data`.
 
-Extraire dans `data/BSDS500/`
+### Utilisation
 
-### Exemples d'utilisation
-
-**1. Démo rapide**
+**Démo rapide**
 
 ```bash
 python quick_start_hss.py
 ```
 
-**2. Execution SIT-HSS sur 3 images (test)**
+**Execution SIT-HSS sur 3 images (test)**
 
 ```bash
 python experiments/run_hierarchical.py --split test --max_images 3 --g data --save
 ```
 
-**3. Execution complète sur split de test**
+**Execution complète sur split de test**
 
 ```bash
 python experiments/run_hierarchical.py --split test --g data --save
 ```
 
-**4. Avec paramètres personnalisés**
+**Avec paramètres personnalisés**
 
 ```bash
 python experiments/run_hierarchical.py \
@@ -439,7 +312,7 @@ python experiments/run_hierarchical.py \
     --save
 ```
 
-**6. Utilisation dans votre code**
+**Utilisation dans votre code**
 
 ```python
 from src.methods.hierarchical.hierarchical_seg import SITHSS
@@ -462,40 +335,34 @@ labels = sithss.fit(image)
 
 ---
 
-## Avantages de SIT-HSS
+## Conclusion
 
-### Par rapport aux méthodes classiques
+### Synthèse des résultats
+L'étude et l'évaluation de la méthode **SIT-HSS** permettent de dégager plusieurs conclusions majeures :
 
-| Aspect | Méthodes classiques | SIT-HSS |
-|--------|-------------------|---------|
-| **Information captée** | Relations adjacentes uniquement | Relations non-adjacentes + globales |
-| **Construction graphe** | Statique, rayon fixe | Adaptive, maximisation H⁽¹⁾ |
-| **Partitionnement** | Heuristiques simples | Optimisation théorique (H⁽²⁾) |
+* **Innovation théorique** : L'application de l'entropie structurelle effective à la superpixelisation propose un nouveau paradigme de segmentation fondé sur une hiérarchie d'encodage optimisée.
+* **Performance de l'état de l'art** : Selon les données de l'article de référence, SIT-HSS surpasse les méthodes actuelles sur l'ensemble des critères de segmentation évalués.
+* **Validation expérimentale** : L'évaluation humaine confirme cette supériorité technique. SIT-HSS est perçue comme offrant le meilleur équilibre global par la majorité des testeurs (56,7 %), se distinguant particulièrement par sa fidélité aux contours et sa précision chromatique.
 
 ---
 
-## Conclusion
+### Application à l'IA ?
+Les méthodes de segmentations par superpixels ne sont pas incompatibles avec l'IA dans notre cas on a :
 
-### Synthèse
+* **Complémentarité avec les GNN** : Ils constituent une unité d'entrée idéale pour les Graph Neural Networks, permettant de simplifier la topologie de l'image sans perdre d'information structurelle.
+* **Interprétabilité** : Contrairement aux modèles "boîte noire", SIT-HSS repose sur des arbres d'encodage explicites qui facilitent la compréhension des décisions de segmentation.
+* **Efficacité et sobriété** : Sa capacité à produire des résultats de haute qualité avec des ressources optimisées en fait un candidat privilégié pour l'Edge Computing et l'imagerie satellite.
 
-1. **SIT-HSS surpasse les méthodes state-of-the-art** sur tous les critères évalués selon l'article
-2. **Innovation théorique** : entropie structurelle effective pour superpixelisation
-3. **Bon compromis qualité/efficacité** comparable aux méthodes les plus rapides (si bien paramétré et optimisé)
-4. **Validation expérimentale** : métriques quantitatives et évaluation humaine qui sont très encourageantes vis-à-vis de l'efficacité de la méthode
+---
 
-### Pertinence à l'ère de l'IA
+### Challenges futurs
+Le potentiel de SIT-HSS ouvre la voie à plusieurs axes de recherche futurs :
 
-Les superpixels via SIT-HSS restent pertinents car :
-- **Complémentarité avec DL** : prétraitement optimal pour Graph Neural Networks
-- **Interprétabilité** : arbres d'encodage explicites
-- **Efficacité** : ressources limitées (edge computing, satellite)
+1. **Intégration Deep Learning** : Inclusion directe dans les pipelines d'apprentissage, notamment pour des opérations de Graph Pooling basées sur la structure hiérarchique de l'algorithme.
+2. **Cohérence temporelle** : Extension aux données vidéo pour assurer une stabilité de segmentation entre les trames via l'entropie structurelle de dimension supérieure.
+3. **Optimisation haute résolution** : Développement d'implémentations multi-GPU pour le traitement en temps réel d'images à très haute résolution.
+4. **Adaptation sectorielle** : Spécialisation des paramètres pour des domaines exigeants tels que l'analyse médicale ou la surveillance satellitaire.
 
-### Perspectives
-
-- Intégration dans pipelines deep learning (graph pooling)
-- Extension aux vidéos (cohérence temporelle via H⁽³⁾)
-- Optimisation multi-GPU pour très grandes images
-- Adaptation domaines spécifiques (médical, satellite)
 
 ---
 
@@ -507,17 +374,3 @@ Les superpixels via SIT-HSS restent pertinents car :
 
 [6] Code source officiel: https://github.com/SELGroup/SIT-HSS
 
----
-
-## Contact
-
-Pour toute question concernant cette implémentation :
-- Ouvrir une issue sur GitHub
-- Consulter la documentation dans `docs/`
-- Voir le projet complet : https://github.com/Evowind/slic-hierarchical-superpixels
-
----
-
-**Licence** : MIT
-
-**Acknowledgments** : Ce travail s'inscrit dans le cadre du cours de Modélisation de systèmes intelligents du M2 VMI. Merci aux auteurs des articles originaux et à l'équipe IPOL pour leurs travaux de référence.
